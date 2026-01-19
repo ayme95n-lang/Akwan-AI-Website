@@ -1,165 +1,213 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة أكوان - Akwan AI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com');
-        body { font-family: 'Tajawal', sans-serif; background-color: #030712; color: white; }
-        .preview-container { background: #f9fafb; color: black; border-radius: 12px; min-height: 450px; overflow: auto; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
-        .loading-spinner { border: 4px solid rgba(255, 255, 255, 0.3); border-top: 4px solid #6366f1; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #genBtn { transition: all 0.3s ease; box-shadow: 0 0 15px rgba(99, 102, 241, 0.5); }
-        #genBtn:hover { box-shadow: 0 0 25px rgba(99, 102, 241, 0.8); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌌 أكوان | Akwan AI</title>
+
+<!-- PWA -->
+<link rel="manifest" href="data:application/json,{
+  &quot;name&quot;:&quot;Akwan AI&quot;,
+  &quot;short_name&quot;:&quot;أكوان&quot;,
+  &quot;start_url&quot;:&quot;.&quot;,
+  &quot;display&quot;:&quot;standalone&quot;,
+  &quot;background_color&quot;:&quot;#050814&quot;,
+  &quot;theme_color&quot;:&quot;#5f2cff&quot;
+}">
+<meta name="theme-color" content="#050814">
+
+<style>
+/* ====== RESET ====== */
+*{box-sizing:border-box}
+
+/* ====== BODY ====== */
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: radial-gradient(circle at top, #1b1f3b, #050814);
+  color:#fff;
+}
+
+/* ====== HEADER ====== */
+header{
+  padding:20px;
+  text-align:center;
+}
+header h1{
+  margin:0;
+  font-size:30px;
+}
+header p{
+  margin-top:8px;
+  opacity:.8;
+  font-size:14px;
+}
+
+/* ====== MAIN ====== */
+main{
+  padding:16px;
+  max-width:600px;
+  margin:auto;
+}
+
+textarea{
+  width:100%;
+  height:150px;
+  padding:15px;
+  border-radius:14px;
+  border:1px solid #2c3160;
+  background:#0c1025;
+  color:#fff;
+  font-size:15px;
+  outline:none;
+}
+
+button{
+  width:100%;
+  margin-top:15px;
+  padding:15px;
+  border:none;
+  border-radius:14px;
+  font-size:17px;
+  font-weight:bold;
+  color:#fff;
+  background: linear-gradient(90deg,#6a5cff,#1cb5e0);
+  cursor:pointer;
+}
+
+button:disabled{
+  opacity:.6;
+}
+
+/* ====== STATUS ====== */
+#status{
+  margin-top:15px;
+  font-size:14px;
+  color:#aaa;
+  white-space:pre-line;
+}
+
+/* ====== OUTPUT ====== */
+pre{
+  margin-top:20px;
+  background:#020413;
+  padding:16px;
+  border-radius:14px;
+  overflow:auto;
+  max-height:420px;
+  font-size:13px;
+}
+
+/* ====== ACTIONS ====== */
+.actions{
+  display:flex;
+  gap:10px;
+  margin-top:15px;
+}
+.actions button{
+  flex:1;
+  background:#1cb5e0;
+}
+
+/* ====== FOOTER ====== */
+footer{
+  text-align:center;
+  padding:20px;
+  font-size:12px;
+  opacity:.4;
+}
+
+/* ====== MOBILE OPTIMIZATION ====== */
+@media(max-width:480px){
+  header h1{font-size:26px}
+  textarea{height:140px}
+  pre{font-size:12px}
+}
+</style>
 </head>
+
 <body>
 
-    <!-- 1. واجهة الترحيب وتسجيل الدخول -->
-    <div id="loginScreen" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50">
-        <div class="bg-gray-800 p-10 rounded-xl shadow-2xl border border-gray-700 text-center max-w-md w-full">
-            <h1 class="text-4xl font-black mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">أكوان AI</h1>
-            <p class="mb-6 text-gray-400">مرحباً بك في منصة البناء التوليدية. الرجاء إدخال كلمة المرور.</p>
-            <input type="password" id="accessPassword" class="w-full p-4 rounded-lg bg-gray-900 border border-gray-600 text-white mb-6 focus:ring-2 focus:ring-indigo-500" placeholder="كلمة المرور (1234)">
-            <button id="loginButton" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2">
-                <span>تسجيل الدخول</span>
-                <i data-lucide="log-in" class="w-5 h-5"></i>
-            </button>
-        </div>
-    </div>
-    
-    <!-- 2. واجهة العمل الرئيسية (مخفية حتى يتم الدخول) -->
-    <div id="mainContent" class="hidden">
-        <div class="max-w-7xl mx-auto p-4 md:p-8">
-            <header class="flex justify-between items-center mb-12">
-                <h1 class="text-4xl font-black bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">أكوان AI</h1>
-                <button onclick="logout()" class="text-gray-500 hover:text-white transition-colors flex items-center gap-2">
-                    <i data-lucide="log-out" class="w-4 h-4"></i>
-                    <span>تسجيل خروج</span>
-                </button>
-            </header>
+<header>
+  <h1>🌌 أكوان</h1>
+  <p>حوّل أفكارك إلى كود كامل بالذكاء الاصطناعي</p>
+</header>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <!-- Left Side: Input & Code -->
-                <div class="space-y-6">
-                    <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
-                        <label for="userInput" class="block mb-3 text-gray-200 font-semibold">صف التطبيق الذي تحتاجه:</label>
-                        <textarea id="userInput" rows="6" class="w-full bg-gray-900 border border-gray-600 rounded-lg p-4 text-white focus:ring-2 focus:ring-indigo-500 outline-none placeholder-gray-500" placeholder="مثال: لوحة تحكم عصرية باللون الأزرق الفاتح تحتوي على قائمة جانبية ورسم بياني للمبيعات الشهرية..."></textarea>
-                        <button onclick="generateApp()" id="genBtn" class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-lg flex justify-center items-center gap-3">
-                            <span>توليد التطبيق</span>
-                            <i data-lucide="zap" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
-                        <h3 class="text-sm font-bold mb-3 text-gray-300 flex items-center gap-2"><i data-lucide="code" class="w-4 h-4"></i> الكود الناتج (HTML/Tailwind):</h3>
-                        <pre id="codeOutput" class="text-xs bg-black p-4 rounded-lg h-64 overflow-y-auto text-green-400 font-mono resize-y"></pre>
-                    </div>
-                </div>
+<main>
+  <textarea id="prompt" placeholder="اكتب ما تريد إنشاءه…
+مثال: تطبيق موبايل بواجهة حديثة يدعم تسجيل الدخول"></textarea>
 
-                <!-- Right Side: Preview -->
-                <div class="flex flex-col">
-                    <div class="flex justify-between items-center mb-3">
-                        <span class="text-gray-200 font-semibold">المعايثة المباشرة (Live Preview)</span>
-                        <div id="loader" class="hidden loading-spinner"></div>
-                    </div>
-                    <div id="preview" class="preview-container flex items-center justify-center p-4">
-                        <div class="text-gray-500 text-center">سيظهر تطبيقك الذي تم توليده هنا فوراً.</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  <button id="generateBtn" onclick="generate()">✨ إنشاء الكود</button>
 
-    <script>
-        lucide.createIcons();
+  <div id="status"></div>
 
-        // --- وظائف التحكم بالواجهات ---
-        function checkAccess() {
-            const enteredPass = document.getElementById('accessPassword').value;
-            const correctPass = "1234"; // كلمة المرور الصحيحة هي 1234
-            if (enteredPass === correctPass) {
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainContent').classList.remove('hidden');
-            } else {
-                alert("كلمة مرور غير صحيحة!");
-                document.getElementById('accessPassword').value = '';
-            }
-        }
+  <pre id="output"></pre>
 
-        function logout() {
-            document.getElementById('mainContent').classList.add('hidden');
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('accessPassword').value = '';
-        }
-        // ------------------------------------
+  <div class="actions">
+    <button onclick="copyCode()">📋 نسخ</button>
+    <button onclick="shareCode()">🔗 مشاركة</button>
+  </div>
+</main>
 
-        async function generateApp() {
-            const promptInput = document.getElementById('userInput');
-            const generateButton = document.getElementById('genBtn');
-            const loaderElement = document.getElementById('loader');
-            const previewContainer = document.getElementById('preview');
-            const codeOutputElement = document.getElementById('codeOutput');
+<footer>
+  © 2026 Akwan AI
+</footer>
 
-            const userPrompt = promptInput.value;
-            if (!userPrompt) return alert("من فضلك اكتب وصفاً للتطبيق");
+<script>
+async function generate(){
+  const prompt = document.getElementById("prompt").value.trim();
+  if(!prompt) return;
 
-            generateButton.disabled = true;
-            generateButton.innerHTML = `<span class="flex items-center gap-2"><i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> جاري البناء...</span>`;
-            loaderElement.classList.remove('hidden');
-            previewContainer.innerHTML = `<div class="text-gray-500 text-center">جاري توليد التصميم... الرجاء الانتظار.</div>`;
-            codeOutputElement.innerText = "جاري الاتصال بالذكاء الاصطناعي...";
+  const btn = document.getElementById("generateBtn");
+  const status = document.getElementById("status");
+  const output = document.getElementById("output");
 
-            // !!! CRITICAL: ضع مفتاح API الجديد الخاص بك هنا !!!
-            const API_KEY = "ضع_مفتاحك_الجديد_هنا"; 
-            const API_URL = `https://generativelanguage.googleapis.com{API_KEY}`;
+  btn.disabled = true;
+  output.textContent = "";
+  status.textContent =
+    "🔍 تحليل الفكرة...\n⚙️ بناء الهيكل...\n🧠 توليد الكود...";
 
-            const systemInstruction = `أنت خبير UI/UX ومطور فرونت إند محترف. مهمتك هي تحويل وصف المستخدم إلى كود HTML واحد كامل باستخدام Tailwind CSS فقط. 
-            يجب أن يكون التصميم عصرياً جداً، يدعم اللغة العربية (RTL) بشكل افتراضي، ويستخدم مكتبة Lucide React للأيقونات (تستخدم كوسوم <i> في هذا الكود).
-            لا تكتب أي مقدمات أو شروحات، فقط الكود الكامل الصافي داخل علامات <html>...</html>.`;
+  try{
+    const res = await fetch("/api/generate",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ prompt })
+    });
 
-            try {
-                const response = await fetch(API_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        contents: }]
-                    })
-                });
+    const data = await res.json();
+    output.textContent = data.code || "لم يتم توليد كود";
+    status.textContent = "✅ تم إنشاء الكود بنجاح";
+  }catch(e){
+    status.textContent = "❌ خطأ في الاتصال";
+  }
 
-                const data = await response.json();
-                
-                if (data.error) {
-                    throw new Error(data.error.message || "فشل الاتصال بواجهة برمجة التطبيقات.");
-                }
+  btn.disabled = false;
+}
 
-                let rawCode = data.candidates.content.parts.text;
-                
-                const cleanCode = rawCode.replace(/```html|```/g, "").trim();
+function copyCode(){
+  navigator.clipboard.writeText(
+    document.getElementById("output").textContent
+  );
+  alert("تم نسخ الكود");
+}
 
-                codeOutputElement.innerText = cleanCode;
+function shareCode(){
+  const text = document.getElementById("output").textContent;
+  if(navigator.share){
+    navigator.share({ title:"Akwan AI", text });
+  }else{
+    alert("المشاركة غير مدعومة");
+  }
+}
 
-                const blob = new Blob([cleanCode], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
-                previewContainer.innerHTML = `<iframe src="${url}" class="w-full h-[600px] border-none bg-white"></iframe>`;
+/* ====== PWA ====== */
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register(
+    URL.createObjectURL(new Blob([`
+      self.addEventListener('fetch',()=>{});
+    `],{type:"text/javascript"}))
+}
+</script>
 
-            } catch (error) {
-                console.error(error);
-                previewContainer.innerHTML = `<div class="p-6 text-red-500 text-center">حدث خطأ: ${error.message}. الرجاء التحقق من مفتاح الـ API أو اتصال الشبكة.</div>`;
-                codeOutputElement.innerText = `حدث خطأ: ${error.message}`;
-            } finally {
-                generateButton.disabled = false;
-                generateButton.innerHTML = `<span>توليد التطبيق</span> <i data-lucide="zap" class="w-5 h-5"></i>`;
-                loaderElement.classList.add('hidden');
-                lucide.createIcons();
-            }
-        }
-        
-        // ربط زر تسجيل الدخول بوظيفة checkAccess بشكل موثوق
-        document.getElementById('loginButton').addEventListener('click', checkAccess);
-    </script>
 </body>
 </html>
